@@ -1,0 +1,9 @@
+:root {
+  font-family: Inter, system-ui, sans-serif;
+  color: #14343b;
+  background: #f3f8f6;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+body { margin: 0; min-width: 320px; }

@@ -1,0 +1,41 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+!**/.env.example
+*.pem
+*.key
+*.jks
+*.p12
+*.p8
+*.keystore
+*.mobileprovision
+google-services.json
+GoogleService-Info.plist
+
+# Java and Maven
+**/target/
+**/build/
+*.class
+*.log
+
+# Node, Vite, Expo, React Native
+**/node_modules/
+**/dist/
+**/dist-ssr/
+**/.expo/
+**/web-build/
+**/.metro-health-check*
+**/android/
+**/ios/
+**/local.properties
+*.tsbuildinfo
+
+# IDE and OS
+.vscode/
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
