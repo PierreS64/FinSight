@@ -1,4 +1,4 @@
-package com.finsight.auth;
+package com.finsight.integration.supabase;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

@@ -1,5 +1,6 @@
-package com.finsight.auth;
+package com.finsight.auth.controller;
 
+import com.finsight.auth.dto.AuthenticatedUser;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +14,4 @@ public class AuthController {
     public AuthenticatedUser me(@AuthenticationPrincipal Jwt jwt) {
         return new AuthenticatedUser(jwt.getSubject(), jwt.getClaimAsString("email"));
     }
-
-    public record AuthenticatedUser(String id, String email) {}
 }

@@ -1,4 +1,4 @@
-package com.finsight.auth;
+package com.finsight.integration.supabase;
 
 import java.util.UUID;
 import org.springframework.security.oauth2.core.OAuth2Error;

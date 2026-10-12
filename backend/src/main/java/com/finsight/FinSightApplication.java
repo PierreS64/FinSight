@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class FinSightBackendApplication {
+public class FinSightApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(FinSightBackendApplication.class, args);
+		SpringApplication.run(FinSightApplication.class, args);
 	}
 
 }

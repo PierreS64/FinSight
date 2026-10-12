@@ -1,4 +1,4 @@
-package com.finsight.config;
+package com.finsight.common.exception;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;

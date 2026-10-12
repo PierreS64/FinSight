@@ -1,4 +1,4 @@
-package com.finsight.auth;
+package com.finsight.auth.controller;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;

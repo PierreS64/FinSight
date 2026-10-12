@@ -1,8 +1,8 @@
-package com.finsight.config;
+package com.finsight.common.security;
 
 import java.util.Arrays;
 import java.util.List;
-import com.finsight.auth.SupabaseUserTokenValidator;
+import com.finsight.integration.supabase.SupabaseUserTokenValidator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
