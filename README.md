@@ -32,9 +32,11 @@ cd backend
 ./mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-Open `http://localhost:8080/api/health`. The local profile uses in-memory H2 and needs no Supabase credentials. Tests use a separate H2 test profile. The API is otherwise protected. Local/test are for foundation checks only; Supabase JWT validation is active in the default profile.
+Open `http://localhost:8080/api/health`. The local profile uses in-memory H2 and needs no Supabase credentials. Tests use a separate H2 test profile. The API is otherwise protected. Local/test are for foundation checks only; Supabase JWT validation is active in the `supabase` profile.
 
-For a configured Supabase environment, set `SUPABASE_DB_URL` to the PostgreSQL JDBC URL, `SUPABASE_DB_USER`, `SUPABASE_DB_PASSWORD`, `SUPABASE_JWT_ISSUER_URI`, and `SUPABASE_JWT_JWK_SET_URI`. Obtain values from your own Supabase project. Use an asymmetric Supabase Auth signing key with a JWKS endpoint; legacy symmetric JWT secrets are not configured here. The default profile validates the schema and does not create tables. Never put a service-role key in either client or commit credentials.
+For a configured Supabase environment, activate the `supabase` profile and set `DB_URL` to the PostgreSQL JDBC URL, plus `DB_USERNAME`, `DB_PASSWORD`, `SUPABASE_JWT_ISSUER_URI`, and `SUPABASE_JWT_JWK_SET_URI`. Obtain values from your own Supabase project; the JDBC URL should use `jdbc:postgresql://` and SSL as required by its connection details. Use an asymmetric Supabase Auth signing key with a JWKS endpoint; legacy symmetric JWT secrets are not configured here. The `local` profile is the default when no profile is selected. The `supabase` profile uses the PostgreSQL driver and `ddl-auto=validate`, so startup checks the schema without creating tables. Never put a service-role key in either client or commit credentials.
+
+With those variables set in the process environment, run `./mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=supabase` from `backend`, then request `http://localhost:8080/actuator/health`. An `UP` response confirms the running application's datasource health check. Running the backend directly does not load the root `.env` file.
 
 ## Web
 
@@ -73,14 +75,14 @@ Copy-Item .env.example .env
 docker compose up --build
 ```
 
-The default `local` profile uses H2 inside the backend container. No database container or persistent volume is created. The backend uses host port 8080 and does not touch the existing Jenkins container on 8081. To use hosted Supabase, set `SPRING_PROFILES_ACTIVE` to a non-local profile and populate the Supabase variables in your untracked root `.env`. Stop only this Compose project with `docker compose down` when done.
+The default `local` profile uses H2 inside the backend container. No database container or persistent volume is created. The backend uses host port 8080 and does not touch the existing Jenkins container on 8081. To use hosted Supabase, set `SPRING_PROFILES_ACTIVE=supabase` and populate the database and JWT variables in your untracked root `.env`. Stop only this Compose project with `docker compose down` when done.
 
 ## Environment variables
 
 | Variable | Used by | Purpose |
 | --- | --- | --- |
-| `SPRING_PROFILES_ACTIVE` | Backend/Compose | `local` for H2; default backend profile for configured Supabase |
-| `SUPABASE_DB_URL`, `SUPABASE_DB_USER`, `SUPABASE_DB_PASSWORD` | Backend | PostgreSQL JDBC connection |
+| `SPRING_PROFILES_ACTIVE` | Backend/Compose | `local` for H2 or `supabase` for PostgreSQL; no selection defaults to `local` |
+| `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | Backend | Supabase PostgreSQL JDBC connection |
 | `SUPABASE_JWT_ISSUER_URI`, `SUPABASE_JWT_JWK_SET_URI` | Backend | Supabase Auth JWT validation |
 | `FINSIGHT_ALLOWED_ORIGINS` | Backend | Comma-separated browser origins; defaults to Vite localhost |
 | `VITE_API_BASE_URL` | Web | Defaults to `http://localhost:8080` |
