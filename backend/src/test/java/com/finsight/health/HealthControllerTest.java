@@ -1,4 +1,4 @@
-package com.finsight.common.controller;
+package com.finsight.health;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;

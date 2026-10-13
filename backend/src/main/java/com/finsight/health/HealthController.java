@@ -1,4 +1,4 @@
-package com.finsight.common.controller;
+package com.finsight.health;
 
 import java.util.Map;
 import org.springframework.web.bind.annotation.GetMapping;
