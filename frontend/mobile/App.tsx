@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Button, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { apiBaseUrl } from './src/config/api';
 import { supabase } from './src/config/supabase';
+import { registrationOutcome, signInErrorMessage, validateRegistration } from './src/registration';
 
 type AuthenticatedUser = { id: string; email: string | null };
 
@@ -12,6 +13,7 @@ export default function App() {
   const [authReady, setAuthReady] = useState(false);
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [apiStatus, setApiStatus] = useState('');
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [signUp, setSignUp] = useState(false);
@@ -64,20 +66,35 @@ export default function App() {
   }, [session?.access_token]);
 
   async function submit() {
-    if (!supabase) return;
+    if (!supabase || busy) return;
     setBusy(true);
     setNotice('');
     try {
-      const result = signUp
-        ? await supabase.auth.signUp({ email: email.trim(), password })
-        : await supabase.auth.signInWithPassword({ email: email.trim(), password });
-      if (result.error) setNotice(result.error.message);
-      else {
-        setPassword('');
-        if (signUp && !result.data.session) setNotice('Check your email to confirm your account, then sign in.');
+      if (signUp) {
+        const validated = validateRegistration(fullName, email, password);
+        if (!validated.ok) {
+          setNotice(validated.message);
+          return;
+        }
+        const { data, error } = await supabase.auth.signUp({
+          email: validated.email,
+          password,
+          options: { data: { full_name: validated.fullName } },
+        });
+        const outcome = registrationOutcome(data, error);
+        setNotice(outcome.message);
+        if (outcome.kind !== 'error') setPassword('');
+      } else {
+        if (!email.trim() || !password) {
+          setNotice('Enter your email and password.');
+          return;
+        }
+        const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+        if (error) setNotice(signInErrorMessage(error));
+        else setPassword('');
       }
     } catch {
-      setNotice('Authentication is unavailable. Please try again.');
+      setNotice(signUp ? 'Registration is unavailable. Please try again.' : 'Authentication is temporarily unavailable. Please try again later.');
     } finally {
       setBusy(false);
     }
@@ -97,14 +114,17 @@ export default function App() {
           <Text style={styles.heading}>Your session</Text>
           <Text>{user?.email ?? session.user.email ?? 'Signed in'}</Text>
           <Text style={styles.notice}>{apiStatus}</Text>
+          {!!notice && <Text style={styles.notice}>{notice}</Text>}
           <Button title="Sign out" onPress={() => void supabase?.auth.signOut()} />
         </View>
       ) : (
         <View style={styles.card}>
           <Text style={styles.heading}>{signUp ? 'Create account' : 'Sign in'}</Text>
+          {signUp && <TextInput style={styles.input} placeholder="Full name" autoCapitalize="words" autoComplete="name" maxLength={100} value={fullName} onChangeText={setFullName} />}
           <TextInput style={styles.input} placeholder="Email" keyboardType="email-address" autoCapitalize="none" autoComplete="email" value={email} onChangeText={setEmail} />
           <TextInput style={styles.input} placeholder="Password" secureTextEntry autoComplete={signUp ? 'new-password' : 'current-password'} value={password} onChangeText={setPassword} />
-          <Button title={busy ? 'Please wait…' : signUp ? 'Create account' : 'Sign in'} disabled={busy || !email || !password} onPress={() => void submit()} />
+          {signUp && <Text style={styles.notice}>Use at least 8 characters. Supabase may require a stronger password.</Text>}
+          <Button title={busy ? 'Please wait…' : signUp ? 'Create account' : 'Sign in'} disabled={busy} onPress={() => void submit()} />
           <Pressable onPress={() => { setSignUp(!signUp); setNotice(''); }}>
             <Text style={styles.switch}>{signUp ? 'Already have an account? Sign in' : 'New to FinSight? Create an account'}</Text>
           </Pressable>

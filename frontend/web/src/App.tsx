@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js'
 import './App.css'
 import { apiBaseUrl } from './config/api'
 import { supabase } from './config/supabase'
+import { registrationOutcome, signInErrorMessage, validateRegistration } from './registration'
 
 type AuthenticatedUser = { id: string; email: string | null }
 
@@ -11,6 +12,7 @@ function App() {
   const [authReady, setAuthReady] = useState(false)
   const [user, setUser] = useState<AuthenticatedUser | null>(null)
   const [apiStatus, setApiStatus] = useState('')
+  const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [signUp, setSignUp] = useState(false)
@@ -64,23 +66,35 @@ function App() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!supabase) return
+    if (!supabase || busy) return
     setBusy(true)
     setNotice('')
     try {
-      const result = signUp
-        ? await supabase.auth.signUp({ email: email.trim(), password })
-        : await supabase.auth.signInWithPassword({ email: email.trim(), password })
-      if (result.error) {
-        setNotice(result.error.message)
-      } else {
-        setPassword('')
-        if (signUp && !result.data.session) {
-          setNotice('Check your email to confirm your account, then sign in.')
+      if (signUp) {
+        const validated = validateRegistration(fullName, email, password)
+        if (!validated.ok) {
+          setNotice(validated.message)
+          return
         }
+        const { data, error } = await supabase.auth.signUp({
+          email: validated.email,
+          password,
+          options: { data: { full_name: validated.fullName } },
+        })
+        const outcome = registrationOutcome(data, error)
+        setNotice(outcome.message)
+        if (outcome.kind !== 'error') setPassword('')
+      } else {
+        if (!email.trim() || !password) {
+          setNotice('Enter your email and password.')
+          return
+        }
+        const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
+        if (error) setNotice(signInErrorMessage(error))
+        else setPassword('')
       }
     } catch {
-      setNotice('Authentication is unavailable. Please try again.')
+      setNotice(signUp ? 'Registration is unavailable. Please try again.' : 'Authentication is temporarily unavailable. Please try again later.')
     } finally {
       setBusy(false)
     }
@@ -100,14 +114,17 @@ function App() {
           <h2>Your session</h2>
           <p>{user?.email ?? session.user.email ?? 'Signed in'}</p>
           <p className="status" role="status">{apiStatus}</p>
+          {notice && <p role="status" className="notice">{notice}</p>}
           <button type="button" onClick={() => void supabase?.auth.signOut()}>Sign out</button>
         </section>
       ) : (
         <section className="auth-card">
           <h2>{signUp ? 'Create account' : 'Sign in'}</h2>
-          <form onSubmit={(event) => void submit(event)}>
+          <form noValidate onSubmit={(event) => void submit(event)}>
+            {signUp && <label>Full name<input type="text" autoComplete="name" maxLength={100} value={fullName} onChange={(event) => setFullName(event.target.value)} required /></label>}
             <label>Email<input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
-            <label>Password<input type="password" autoComplete={signUp ? 'new-password' : 'current-password'} value={password} onChange={(event) => setPassword(event.target.value)} required minLength={6} /></label>
+            <label>Password<input type="password" autoComplete={signUp ? 'new-password' : 'current-password'} value={password} onChange={(event) => setPassword(event.target.value)} required /></label>
+            {signUp && <p className="status">Use at least 8 characters. Supabase may require a stronger password.</p>}
             <button type="submit" disabled={busy}>{busy ? 'Please wait…' : signUp ? 'Create account' : 'Sign in'}</button>
           </form>
           <button className="switch" type="button" onClick={() => { setSignUp(!signUp); setNotice('') }}>

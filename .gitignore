@@ -31,6 +31,10 @@ GoogleService-Info.plist
 **/local.properties
 *.tsbuildinfo
 
+# UI design references
+/stitch_finsight_mobile_finance_app/
+/stitch_finsight_personal_finance_dashboard/
+
 # IDE and OS
 .vscode/
 .idea/
